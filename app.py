@@ -78,35 +78,40 @@ def eliminar_departamento(id):
         sql = "DELETE FROM Human_resources.Departments_2 WHERE DEPARTMENT_ID = %s;"
         cursor.execute(sql, (id,))
         conexion.connection.commit()
-        return jsonify({'mensaje': f'Departamento con ID {id} eliminado correctamente'}), 200  # Código 200 = OK
+        return jsonify({'mensaje': f'Departamento con ID {id} eliminado correctamente'}), 200  # Código 200 
     except Exception as ex:
-        return jsonify({'error': 'Error al eliminar el departamento', 'detalle': str(ex)}), 500  # Código 500 = Internal Server Error
+        return jsonify({'error': 'Error al eliminar el departamento', 'detalle': str(ex)}), 500  # Código 500 
 
 
-
-## ACTUALIZAR
+##UPDATE  = Put
 @app.route('/Department/<int:id>', methods=['PUT'])
 def actualizar_departamento(id):
     try: 
         cursor = conexion.connection.cursor()
-        datos = request.json
+        datos = request.json  
+        columnas_validas = {
+            "DEPARTMENT_ID", "DEPARTMENT_NAME", "DEPARTMENT_ABREV",
+            "MANAGER_ID", "LAST_UPDATED", "LOCATION"
+        }
 
         campos = []
         valores = []
 
-        if "nombre" in datos:
-            campos.append("DEPARTMENT_NAME = %s")
-            valores.append(datos["nombre"])
-        if "ubicacion" in datos:
-            campos.append("LOCATION = %s")
-            valores.append(datos["ubicacion"])
-        if "abreviatura" in datos:
-            campos.append("DEPARTMENT_ABREV = %s")
-            valores.append(datos["abreviatura"])
+        # Filtrar solo las claves que sean columnas válidas
+        for clave, valor in datos.items():
+            if clave in columnas_validas:
+                campos.append(f"{clave} = %s")
+                valores.append(valor)
 
+    ##Campos que si existemn
+        if not campos:
+            return jsonify({'error': 'No se enviaron campos válidos para actualizar'}), 400
 
+##Consulta
         sql = f"UPDATE Human_resources.Departments_2 SET {', '.join(campos)} WHERE DEPARTMENT_ID = %s;"
         valores.append(id)
+
+        # Ejecutar la actualización en la base de datos
         cursor.execute(sql, tuple(valores))
         conexion.connection.commit()
         
